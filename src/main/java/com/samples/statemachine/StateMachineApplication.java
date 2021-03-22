@@ -2,20 +2,19 @@ package com.samples.statemachine;
 
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
-import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
+@RequiredArgsConstructor
 public class StateMachineApplication implements CommandLineRunner {
 
-    @Autowired
-    private StateMachine<States, Events> stateMachine;
+    private final StateMachine<States, Events> stateMachine;
 
     public static void main(String[] args) {
         SpringApplication.run(StateMachineApplication.class, args);
