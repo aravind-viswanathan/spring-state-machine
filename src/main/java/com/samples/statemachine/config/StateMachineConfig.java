@@ -4,7 +4,7 @@ import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.statemachine.config.EnableStateMachine;
+import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
@@ -13,15 +13,14 @@ import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
 
-import java.util.EnumSet;
 import java.util.Set;
 
 @Configuration
-@EnableStateMachine
+@EnableStateMachineFactory
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States, Events> {
 
     @Override
-    public void configure(StateMachineConfigurationConfigurer<States, Events> config) throws Exception{
+    public void configure(StateMachineConfigurationConfigurer<States, Events> config) throws Exception {
         config
                 .withConfiguration()
                 .autoStartup(true)
@@ -36,19 +35,20 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .initial(States.INITIAL)
                 .fork(States.FORK)
                 .states(Set.of(States.S1, States.S2))
+                .end(States.FINAL)
                 .join(States.JOIN)
                 .and()
                 .withStates()
-                    .parent(States.FORK)
-                    .initial(States.S31)
-                    .state(States.S32)
-                    .end(States.S33)
+                .parent(States.FORK)
+                .initial(States.S31)
+                .state(States.S32)
+                .end(States.S33)
                 .and()
                 .withStates()
-                    .parent(States.FORK)
-                    .initial(States.S41)
-                    .state(States.S42)
-                    .end(States.S43);
+                .parent(States.FORK)
+                .initial(States.S41)
+                .state(States.S42)
+                .end(States.S43);
 
     }
 
@@ -63,7 +63,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .withExternal().source(States.S2).target(States.FORK).event(Events.EF)
                 .and()
                 .withFork().source(States.FORK).target(States.S31).target(States.S41)
-               .and()
+                .and()
+                .withJoin().source(States.S33).source(States.S43).target(States.JOIN)
+                .and()
                 .withExternal().source(States.S31).target(States.S32).event(Events.E31)
                 .and()
                 .withExternal().source(States.S32).target(States.S33).event(Events.E32)
@@ -71,8 +73,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .withExternal().source(States.S41).target(States.S42).event(Events.E41)
                 .and()
                 .withExternal().source(States.S42).target(States.S43).event(Events.E42)
-                .and()
-                .withJoin().source(States.S33).source(States.S43).target(States.JOIN)
                 .and()
                 .withExternal().source(States.JOIN).target(States.FINAL);
     }
@@ -86,4 +86,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
             }
         };
     }
+
+
+
+
 }
