@@ -2,7 +2,7 @@ package com.samples.statemachine.config;
 
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
@@ -12,24 +12,18 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
-import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.statemachine.state.State;
 
 import java.util.Set;
 
 @Configuration
 @EnableStateMachineFactory
+@Slf4j
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States, Events> {
-
-    @Autowired
-    private StateMachineRuntimePersister<States, Events, String> stateMachineRuntimePersister;
 
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<States, Events> config) throws Exception {
-        config
-                .withPersistence()
-                    .runtimePersister(stateMachineRuntimePersister);
         config.withConfiguration()
                     .autoStartup(true)
                     .listener(listener());
@@ -90,12 +84,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
         return new StateMachineListenerAdapter<States, Events>() {
             @Override
             public void stateChanged(State<States, Events> from, State<States, Events> to) {
-                System.out.println("State change to " + to.getId());
+                log.debug("State change to {}" , to.getId());
             }
         };
     }
-
-
-
-
 }

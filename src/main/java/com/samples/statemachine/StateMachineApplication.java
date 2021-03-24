@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.UUID;
 
@@ -16,7 +17,8 @@ public class StateMachineApplication implements CommandLineRunner {
     private final EventService eventService;
 
     public static void main(String[] args) {
-        SpringApplication.run(StateMachineApplication.class, args);
+        var context = SpringApplication.run(StateMachineApplication.class, args);
+        context.close();
     }
 
     @Override
@@ -30,6 +32,5 @@ public class StateMachineApplication implements CommandLineRunner {
         eventService.handleEvent(Events.E41, serverID);
         eventService.handleEvent(Events.E42,serverID);
         eventService.handleEvent(Events.E32,serverID);
-
     }
 }

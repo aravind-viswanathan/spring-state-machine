@@ -28,14 +28,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.statemachine.StateMachinePersist;
-import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.statemachine.data.redis.*;
+import org.springframework.statemachine.data.redis.RedisStateMachineContextRepository;
+import org.springframework.statemachine.data.redis.RedisStateMachinePersister;
 import org.springframework.statemachine.persist.DefaultStateMachinePersister;
 import org.springframework.statemachine.persist.RepositoryStateMachinePersist;
 import org.springframework.statemachine.persist.StateMachinePersister;
-import org.springframework.statemachine.persist.StateMachineRuntimePersister;
-import org.springframework.statemachine.service.DefaultStateMachineService;
-import org.springframework.statemachine.service.StateMachineService;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -63,44 +60,31 @@ public class RedissonConfig {
         return new RedissonSpringCacheManager(redissonClient);
     }
 
+
     @Bean
     public RedissonConnectionFactory redissonConnectionFactory(RedissonClient redisson) {
         return new RedissonConnectionFactory(redisson);
     }
 
-//    @Bean
-//    public StateMachinePersist<States, Events, String> stateMachinePersist(RedisConnectionFactory connectionFactory) {
-//        RedisStateMachineContextRepository<States, Events> repository =
-//                new RedisStateMachineContextRepository<States, Events>(connectionFactory);
-//        return new RepositoryStateMachinePersist<States, Events>(repository);
-//    }
-//
-//    @Bean
-//    public RedisStateMachinePersister<States, Events> redisStateMachinePersister(
-//            StateMachinePersist<States, Events, String> stateMachinePersist) {
-//        var sample = new RedisStateMachinePersister<>(stateMachinePersist);
-//        return new RedisStateMachinePersister<States, Events>(stateMachinePersist);
-//
-//    }
-
-//    @Bean
-//    public StateMachinePersister<States, Events, String> persister(StateMachinePersist<States, Events, String> persist){
-//        return new DefaultStateMachinePersister<States, Events,String >(persist);
-//    }
-
 
     @Bean
-    public StateMachineRuntimePersister<States, Events, String> stateMachineRuntimePersister(RedisStateMachineRepository redisStateMachineRepository) {
-        return new RedisPersistingStateMachineInterceptor<>(redisStateMachineRepository);
+    public StateMachinePersist<States, Events, String> stateMachinePersist(RedisConnectionFactory connectionFactory) {
+        RedisStateMachineContextRepository<States, Events> repository =
+                new RedisStateMachineContextRepository<States, Events>(connectionFactory);
+        return new RepositoryStateMachinePersist<States, Events>(repository);
     }
 
     @Bean
-    public StateMachineService<States, Events> stateMachineService(
-            StateMachineFactory<States, Events> stateMachineFactory,
-            StateMachineRuntimePersister<States, Events, String> stateMachineRuntimePersister) {
-        return new DefaultStateMachineService<States, Events>(stateMachineFactory, stateMachineRuntimePersister);
+    public RedisStateMachinePersister<States, Events> redisStateMachinePersister(
+            StateMachinePersist<States, Events, String> stateMachinePersist) {
+        return new RedisStateMachinePersister<States, Events>(stateMachinePersist);
+
     }
 
+    @Bean
+    public StateMachinePersister<States, Events, String> persister(StateMachinePersist<States, Events, String> persist){
+        return new DefaultStateMachinePersister<States, Events,String >(persist);
+    }
 
     private static class NullValueSerializer extends StdSerializer<NullValue>{
 

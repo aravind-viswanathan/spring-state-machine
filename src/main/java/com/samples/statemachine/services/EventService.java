@@ -8,7 +8,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.persist.StateMachinePersister;
-import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -21,39 +20,30 @@ import java.util.concurrent.CountDownLatch;
 @Slf4j
 public class EventService {
 
-    private StateMachine<States, Events> stateMachine;
+
 
     private final StateMachineFactory<States, Events> stateMachineFactory;
 
     //private final RedissonCache cache;
 
-//    private final StateMachinePersister<States, Events, String> persister;
+    private final StateMachinePersister<States, Events, String> persister;
     //private final StateMachineRuntimePersister<States, Events, String> persister;
 
     private static final boolean useLock = false;
 
     public void handleEvent(Events event, UUID serverId) {
+         StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine();
         try {
-//            log.info("Sending event {} for State machine", event);
-//            try {
-//                var val = persister.read(serverId.toString());
-//
-//                persister.restore(stateMachine, serverId.toString());
-//            }catch(NullPointerException ex){
-//
-//            }
-
-            if(stateMachine==null){
-                stateMachine = stateMachineFactory.getStateMachine(serverId);
-            }
-            sendEvent(event);
-//            persister.persist(stateMachine, serverId.toString());
+            log.info("Sending event {} for State machine", event);
+            persister.restore(stateMachine, serverId.toString());
+            sendEvent(stateMachine, event);
+            persister.persist(stateMachine, serverId.toString());
         }catch(Exception ex){
            log.error("An error occurred while handling the event", ex);
         }
     }
 
-    void sendEvent(Events event, CountDownLatch latch, CountDownLatch resumeLatch) {
+    void sendEvent(StateMachine<States, Events> stateMachine, Events event, CountDownLatch latch, CountDownLatch resumeLatch) {
         try {
             if (latch != null) {
                 latch.await();
@@ -77,21 +67,21 @@ public class EventService {
         }
     }
 
-    void sendEvent(Events event, boolean toSleep, CountDownLatch latch, CountDownLatch resumeLatch) {
+    void sendEvent(StateMachine<States, Events> stateMachine, Events event, boolean toSleep, CountDownLatch latch, CountDownLatch resumeLatch) {
         if (toSleep) {
             Thread t = new Thread(() -> {
-                sendEvent(event, latch, resumeLatch);
+                sendEvent(stateMachine, event, latch, resumeLatch);
             });
             t.start();
         } else {
-            sendEvent(event, latch, resumeLatch);
+            sendEvent(stateMachine,event, latch, resumeLatch);
         }
 
     }
 
 
-    void sendEvent(Events events) {
-        sendEvent(events, false, null, null);
+    void sendEvent(StateMachine<States, Events> stateMachine, Events events) {
+        sendEvent(stateMachine, events, false, null, null);
     }
 
 }
