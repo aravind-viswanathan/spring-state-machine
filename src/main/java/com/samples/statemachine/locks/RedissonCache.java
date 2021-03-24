@@ -6,7 +6,7 @@ import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 @RequiredArgsConstructor
 public class RedissonCache<K, V> {
 

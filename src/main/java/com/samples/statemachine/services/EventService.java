@@ -2,6 +2,7 @@ package com.samples.statemachine.services;
 
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
+import com.samples.statemachine.locks.RedissonCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.support.MessageBuilder;
@@ -24,15 +25,15 @@ public class EventService {
 
     private final StateMachineFactory<States, Events> stateMachineFactory;
 
-    //private final RedissonCache cache;
+    private final RedissonCache cache;
 
     private final StateMachinePersister<States, Events, String> persister;
     //private final StateMachineRuntimePersister<States, Events, String> persister;
 
-    private static final boolean useLock = false;
+    private static final boolean useLock = true;
 
     public void handleEvent(Events event, UUID serverId) {
-         StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine();
+        StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine(serverId);
         try {
             log.info("Sending event {} for State machine", event);
             persister.restore(stateMachine, serverId.toString());
@@ -43,45 +44,23 @@ public class EventService {
         }
     }
 
-    void sendEvent(StateMachine<States, Events> stateMachine, Events event, CountDownLatch latch, CountDownLatch resumeLatch) {
-        try {
-            if (latch != null) {
-                latch.await();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    void sendEvent(StateMachine<States, Events> stateMachine, Events event) {
         try {
             if (useLock) {
-                //cache.getLock("id");
+            while(!cache.getLock(stateMachine.getUuid().toString())){
+                    Thread.sleep(2000);
+                    //do nothing.. basically wait for the lock
+                }
             }
-            System.out.println("Sending " + event + " at " + LocalDateTime.now());
             stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).subscribe();
+        } catch (InterruptedException e) {
+            log.error("Exception occurred.. ");
         } finally {
             if (useLock) {
-                //cache.releaseLock("id");
+                cache.releaseLock(stateMachine.getUuid().toString());
             }
         }
-        if (resumeLatch != null) {
-            resumeLatch.countDown();
-        }
     }
 
-    void sendEvent(StateMachine<States, Events> stateMachine, Events event, boolean toSleep, CountDownLatch latch, CountDownLatch resumeLatch) {
-        if (toSleep) {
-            Thread t = new Thread(() -> {
-                sendEvent(stateMachine, event, latch, resumeLatch);
-            });
-            t.start();
-        } else {
-            sendEvent(stateMachine,event, latch, resumeLatch);
-        }
-
-    }
-
-
-    void sendEvent(StateMachine<States, Events> stateMachine, Events events) {
-        sendEvent(stateMachine, events, false, null, null);
-    }
 
 }
