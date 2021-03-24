@@ -2,6 +2,7 @@ package com.samples.statemachine.config;
 
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
@@ -11,6 +12,7 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
+import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.statemachine.state.State;
 
 import java.util.Set;
@@ -19,12 +21,18 @@ import java.util.Set;
 @EnableStateMachineFactory
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States, Events> {
 
+    @Autowired
+    private StateMachineRuntimePersister<States, Events, String> stateMachineRuntimePersister;
+
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<States, Events> config) throws Exception {
         config
-                .withConfiguration()
-                .autoStartup(true)
-                .listener(listener());
+                .withPersistence()
+                    .runtimePersister(stateMachineRuntimePersister);
+        config.withConfiguration()
+                    .autoStartup(true)
+                    .listener(listener());
     }
 
     @Override

@@ -2,15 +2,13 @@ package com.samples.statemachine.services;
 
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
-import com.samples.statemachine.locks.RedissonCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachinePersist;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.persist.StateMachinePersister;
+import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -27,26 +25,29 @@ public class EventService {
 
     private final StateMachineFactory<States, Events> stateMachineFactory;
 
-    private final RedissonCache cache;
+    //private final RedissonCache cache;
 
-    private final StateMachinePersister<States, Events, UUID> persister;
+//    private final StateMachinePersister<States, Events, String> persister;
+    //private final StateMachineRuntimePersister<States, Events, String> persister;
 
     private static final boolean useLock = false;
 
     public void handleEvent(Events event, UUID serverId) {
         try {
-            log.info("Sending event {} for State machine", event);
-            try {
-                persister.restore(stateMachine, serverId);
-            }catch(NullPointerException ex){
-                stateMachine = stateMachineFactory.getStateMachine(serverId);
-            }
+//            log.info("Sending event {} for State machine", event);
+//            try {
+//                var val = persister.read(serverId.toString());
+//
+//                persister.restore(stateMachine, serverId.toString());
+//            }catch(NullPointerException ex){
+//
+//            }
 
             if(stateMachine==null){
                 stateMachine = stateMachineFactory.getStateMachine(serverId);
             }
             sendEvent(event);
-            persister.persist(stateMachine, serverId);
+//            persister.persist(stateMachine, serverId.toString());
         }catch(Exception ex){
            log.error("An error occurred while handling the event", ex);
         }
@@ -62,13 +63,13 @@ public class EventService {
         }
         try {
             if (useLock) {
-                cache.getLock("id");
+                //cache.getLock("id");
             }
             System.out.println("Sending " + event + " at " + LocalDateTime.now());
             stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).subscribe();
         } finally {
             if (useLock) {
-                cache.releaseLock("id");
+                //cache.releaseLock("id");
             }
         }
         if (resumeLatch != null) {
