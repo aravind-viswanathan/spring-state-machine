@@ -5,6 +5,7 @@ import com.samples.statemachine.enums.States;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -84,8 +85,22 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
         return new StateMachineListenerAdapter<States, Events>() {
             @Override
             public void stateChanged(State<States, Events> from, State<States, Events> to) {
-                log.debug("State change to {}" , to.getId());
+                //System.out.println(String.format("State change to %s",to.getId()));
+                //log.debug("State change to {}" , to.getId());
             }
         };
     }
+
+    @Bean
+    public Action<States, Events> sleepAction(){
+        return context -> {
+            try{
+                System.out.println("Executing sleep action");
+                Thread.sleep(5000);
+            }catch(Exception ex){
+
+            }
+        };
+    }
+
 }

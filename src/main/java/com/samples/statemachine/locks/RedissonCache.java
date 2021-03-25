@@ -13,18 +13,18 @@ public class RedissonCache<K, V> {
     private final RedissonClient client;
 
     public boolean getLock(String id){
-        RLock lock = client.getFairLock(id);
+        RLock lock = client.getFairLock(id+"_LOCK");
         return lock.tryLock();
     }
 
     public void releaseLock(String id){
-        RLock lock = client.getFairLock(id);
+        RLock lock = client.getFairLock(id+"_LOCK");
         lock.unlock();
     }
 
     public boolean putInCache(String name, K id, V value){
         RMap<K, V> map = client.getMap(name);
-        var result = map.put(id, value);
+        map.put(id, value);
         return true;
     }
 
