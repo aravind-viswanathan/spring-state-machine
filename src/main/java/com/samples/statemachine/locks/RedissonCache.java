@@ -34,8 +34,8 @@ public class RedissonCache<K, V> {
     }
 
     public boolean deleteFromCache(K id){
-        //client.
-        return true;
+        var bucket = client.getBucket((String)id);
+        return bucket.delete();
     }
 
 }

@@ -1,40 +1,45 @@
 package com.samples.statemachine.services;
 
+import com.samples.statemachine.command.Commands;
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
 import com.samples.statemachine.locks.RedissonCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.statemachine.ObjectStateMachine;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventService {
 
-
-
     private final StateMachineFactory<States, Events> stateMachineFactory;
 
-    private final RedissonCache cache;
+    private final RedissonCache<String, Object> cache;
 
     private final StateMachinePersister<States, Events, String> persister;
 
     private static final boolean useLock = true;
+
+    public String getCurrentState(UUID serverId) throws Exception{
+        StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine(serverId);
+        try{
+            persister.restore(stateMachine, serverId.toString());
+            return stateMachine.getState().getIds().stream().map(States::name).collect(Collectors.joining(","));
+        }catch(Exception ex){
+            log.error("An error has occurred");
+            throw ex;
+        }
+
+    }
 
     public String handleEvent(Events event, UUID serverId, int sleep) {
         StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine(serverId);
@@ -50,8 +55,7 @@ public class EventService {
     }
 
     public boolean deleteMachine(UUID serverId){
-        cache.deleteFromCache(serverId);
-        return true;
+        return cache.deleteFromCache(serverId.toString());
     }
 
     void sendEvent(StateMachine<States, Events> stateMachine, Events event, int sleep) {
@@ -63,7 +67,9 @@ public class EventService {
                 }
             }
             Thread.sleep(sleep*1000);
-            stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).subscribe();
+            stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).doOnNext(s->{
+                Commands.print("The transition has been "+s.getResultType().toString());
+            }).subscribe();
 
         } catch (InterruptedException e) {
             log.error("Exception occurred.. ");
@@ -81,6 +87,5 @@ public class EventService {
         persister.persist(stateMachine, uuid.toString());
         return true;
     }
-
 
 }
