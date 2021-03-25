@@ -46,7 +46,6 @@ public class EventService {
         }catch(Exception ex){
            log.error("An error occurred while handling the event", ex);
         }
-        System.out.println(stateMachine.hasStateMachineError());
         return stateMachine.getState().getIds().stream().map(States::name).collect(Collectors.joining(","));
     }
 
