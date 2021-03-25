@@ -49,6 +49,17 @@ public class Commands {
         }
     }
 
+    public String deleteStateMachine(@ShellOption({"-n","--name"})String name){
+        try{
+            UUID uuid = getUUIDFromName(name);
+            eventService.deleteMachine(uuid);
+            return "State machine deleted";
+        }catch(Exception ex){
+            log.error("An exception has occurred");
+            throw ex;
+        }
+    }
+
     @ShellMethod(value = "Send an event to the state machine", key = "send-event", prefix = "-")
     public String sendEvent(@ShellOption({"-sm", "--state-machine"}) @NotNull String stateMachine, @ShellOption({"-e", "--event"}) @NotNull Events event, @ShellOption(value = {"-t 10", "--sleep-time"}, defaultValue = "0") int sleepTime) {
         System.out.println("Processing event " + event + " for state machine" + stateMachine);

@@ -49,6 +49,11 @@ public class EventService {
         return stateMachine.getState().getIds().stream().map(States::name).collect(Collectors.joining(","));
     }
 
+    public boolean deleteMachine(UUID serverId){
+        cache.deleteFromCache(serverId);
+        return true;
+    }
+
     void sendEvent(StateMachine<States, Events> stateMachine, Events event, int sleep) {
         try {
             if (useLock) {

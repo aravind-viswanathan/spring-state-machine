@@ -33,4 +33,9 @@ public class RedissonCache<K, V> {
         return map.get(id);
     }
 
+    public boolean deleteFromCache(K id){
+        //client.
+        return true;
+    }
+
 }
