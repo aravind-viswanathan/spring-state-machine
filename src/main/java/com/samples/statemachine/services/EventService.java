@@ -45,11 +45,21 @@ public class EventService {
         StateMachine<States, Events> stateMachine = stateMachineFactory.getStateMachine(serverId);
         try {
             log.info("Sending event {} for State machine", event);
+            if (useLock) {
+                while(!cache.getLock(stateMachine.getUuid().toString())){
+                    Thread.sleep(2000);
+                    //do nothing.. basically wait for the lock
+                }
+            }
             persister.restore(stateMachine, serverId.toString());
             sendEvent(stateMachine, event, sleep);
             persister.persist(stateMachine, serverId.toString());
         }catch(Exception ex){
            log.error("An error occurred while handling the event", ex);
+        }finally {
+            if (useLock) {
+                cache.releaseLock(stateMachine.getUuid().toString());
+            }
         }
         return stateMachine.getState().getIds().stream().map(States::name).collect(Collectors.joining(","));
     }
@@ -60,12 +70,7 @@ public class EventService {
 
     void sendEvent(StateMachine<States, Events> stateMachine, Events event, int sleep) {
         try {
-            if (useLock) {
-            while(!cache.getLock(stateMachine.getUuid().toString())){
-                    Thread.sleep(2000);
-                    //do nothing.. basically wait for the lock
-                }
-            }
+
             Thread.sleep(sleep*1000);
             stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).doOnNext(s->{
                 Commands.print("The transition has been "+s.getResultType().toString());
@@ -75,10 +80,6 @@ public class EventService {
             log.error("Exception occurred.. ");
         } catch (Exception ex){
             log.error("Exception occurred...", ex);
-        } finally {
-            if (useLock) {
-                cache.releaseLock(stateMachine.getUuid().toString());
-            }
         }
     }
 

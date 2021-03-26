@@ -103,10 +103,10 @@ public class Commands {
     }
 
     public static void print(String message){
-        if(console==null){
+       // if(console==null){
             System.out.println(message);
-        }else{
+       // }else{
             console.writer().print(message);
-        }
+       // }
     }
 }
