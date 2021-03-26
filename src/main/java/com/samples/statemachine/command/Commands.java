@@ -70,7 +70,8 @@ public class Commands {
         while (scanner.hasNextLine()) {
             theString.append("\n").append(scanner.nextLine());
         }
-        print(theString.toString());
+        System.out.println(theString);
+        //print(theString.toString());
     }
 
     @ShellMethod(value = "Send an event to the state machine", key = "send-event", prefix = "-")
