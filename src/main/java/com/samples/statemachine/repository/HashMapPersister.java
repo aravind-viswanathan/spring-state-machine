@@ -6,7 +6,7 @@ import com.samples.statemachine.locks.RedissonCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.StateMachinePersist;
-import org.springframework.stereotype.Component;
+
 
 import java.util.HashMap;
 import java.util.UUID;

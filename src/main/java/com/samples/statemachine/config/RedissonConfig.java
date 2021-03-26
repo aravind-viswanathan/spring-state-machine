@@ -10,17 +10,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.samples.statemachine.enums.Events;
 import com.samples.statemachine.enums.States;
-import com.samples.statemachine.locks.RedissonCache;
-import com.samples.statemachine.repository.HashMapPersister;
-import com.sun.istack.Nullable;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.codec.JsonJacksonCodec;
-import org.redisson.codec.LZ4Codec;
 import org.redisson.config.Config;
 import org.redisson.spring.cache.NullValue;
 import org.redisson.spring.cache.RedissonCacheStatisticsAutoConfiguration;
 import org.redisson.spring.cache.RedissonSpringCacheManager;
+import org.redisson.spring.data.connection.RedissonConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cache.CacheManager;
@@ -28,14 +25,17 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import org.springframework.statemachine.StateMachineContext;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.statemachine.StateMachinePersist;
+import org.springframework.statemachine.data.redis.RedisStateMachineContextRepository;
+import org.springframework.statemachine.data.redis.RedisStateMachinePersister;
 import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.RepositoryStateMachinePersist;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.UUID;
 
 @Configuration
 @EnableAutoConfiguration(exclude = {RedissonCacheStatisticsAutoConfiguration.class})
@@ -62,13 +62,28 @@ public class RedissonConfig {
 
 
     @Bean
-    public StateMachinePersist<States, Events, UUID> hashMapPersister(RedissonCache<UUID, StateMachineContext<States, Events>> cache){
-        return new HashMapPersister(cache);
+    public RedissonConnectionFactory redissonConnectionFactory(RedissonClient redisson) {
+        return new RedissonConnectionFactory(redisson);
+    }
+
+
+    @Bean
+    public StateMachinePersist<States, Events, String> stateMachinePersist(RedisConnectionFactory connectionFactory) {
+        RedisStateMachineContextRepository<States, Events> repository =
+                new RedisStateMachineContextRepository<States, Events>(connectionFactory);
+        return new RepositoryStateMachinePersist<States, Events>(repository);
     }
 
     @Bean
-    public StateMachinePersister<States, Events, UUID> persister(StateMachinePersist<States, Events, UUID> persist){
-        return new DefaultStateMachinePersister<>(persist);
+    public RedisStateMachinePersister<States, Events> redisStateMachinePersister(
+            StateMachinePersist<States, Events, String> stateMachinePersist) {
+        return new RedisStateMachinePersister<States, Events>(stateMachinePersist);
+
+    }
+
+    @Bean
+    public StateMachinePersister<States, Events, String> persister(StateMachinePersist<States, Events, String> persist){
+        return new DefaultStateMachinePersister<States, Events,String >(persist);
     }
 
     private static class NullValueSerializer extends StdSerializer<NullValue>{
