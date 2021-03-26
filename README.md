@@ -1,6 +1,9 @@
 # spring-state-machine
 
-The project has a pre-defined state machine with the state diagram as below. 
+The project has a pre-defined state machine with the state diagram as below.
+
+![POC.png](src/main/resources/POC.png?raw=true)
+(FORK and JOIN are pseudo states and consequently there are no external transitions)
 
 This project is as a PoC to have a distributed state machine using Redis as a backing store to store the StateMachineContext. 
 

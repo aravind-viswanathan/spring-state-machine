@@ -47,8 +47,7 @@ public class EventService {
             log.info("Sending event {} for State machine", event);
             if (useLock) {
                 while(!cache.getLock(stateMachine.getUuid().toString())){
-                    Thread.sleep(2000);
-                    //do nothing.. basically wait for the lock
+                    //wait for lock
                 }
             }
             persister.restore(stateMachine, serverId.toString());
@@ -70,7 +69,6 @@ public class EventService {
 
     void sendEvent(StateMachine<States, Events> stateMachine, Events event, int sleep) {
         try {
-
             Thread.sleep(sleep*1000);
             stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build())).doOnNext(s->{
                 Commands.print("The transition has been "+s.getResultType().toString());
