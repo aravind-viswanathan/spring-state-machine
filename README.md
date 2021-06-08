@@ -7,7 +7,7 @@ The project has a pre-defined state machine with the state diagram as below.
 
 This project is as a PoC to have a distributed state machine using Redis as a backing store to store the StateMachineContext. 
 
-The Distributed State Machine offerred by Spring uses Zookeeper and is currently not production ready and this project is a stop-gap for it until such timeZK solution is deemed production ready. 
+The Distributed State Machine offerred by Spring uses Zookeeper and is currently not production ready and this project is a stop-gap for it until such time ZK solution is deemed production ready. 
 
 Dependencies
 
@@ -27,3 +27,4 @@ The project uses Spring Shell and supports the following commands
 * list-events - Lists all the events supported by the state machine. 
 * list-states - Lists all the states supported by the state machine. 
 * delete-sm _statemachine_ - Delete the state machine
+* help - Lists all the commands supported by the shell.
